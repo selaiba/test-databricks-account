@@ -1,0 +1,97 @@
+name: "Terraform main workflow"
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+      - '*.tf'
+      - '*.tfvars'
+  pull_request:
+    branches:
+    - main
+    paths:
+      - '*.tf'
+      - '*.tfvars'
+  workflow_dispatch:
+
+#GitHub Actions GITHUB_TOKEN permissions
+permissions:
+  id-token: write      # Erlaubt der Action, einen OIDC-Token (OpenID Connect) von GitHub abzurufen(Ohne write kann sich Terraform nicht gegenüber Azure ausweisen)
+  actions: read        # Erlaubt der Action, Informationen über andere Workflows abzurufen oder diese zu steuern (z. B. einen Workflow abzubrechen).
+  checks: write        # Erlaubt das Erstellen und Aktualisieren von „Check Runs“ (die grünen Häkchen oder roten Kreuze bei den PR-Statusmeldungen)
+  contents: read       # Zugriff auf den Quellcode des Repositories.
+  pull-requests: write # Interaktion mit Pull Requests (hier write ist benétigt, um den Terraform-Plan als Kommentar unter deinen PR zu posten)
+
+jobs:
+  parse-working-directory:
+    name: "Parse Working Directory"
+    runs-on: ubuntu-latest
+    outputs:
+      working_directory: ${{ steps.parse.outputs.working_directory }}
+    steps:
+      - id: parse
+        #Anzeigename im UI
+        name: parse
+        #Führt das Script mit PowerShell Core aus.
+        shell: pwsh
+        run: |
+          Write-Output "working_directory=." >> $env:GITHUB_OUTPUT
+
+  generate-docs:
+    # Warning fixed in https://github.com/terraform-docs/gh-actions/issues/97#issuecomment-2016256973
+    name: "Generate Docs"
+    needs: parse-working-directory
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      # Update terraform-docs and push
+      - name: Render terraform docs and push changes back to PR
+        uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1.4.1
+        with:
+          working-dir: ${{needs.parse-working-directory.outputs.working_directory}}
+          output-file: README.md
+          output-method: inject
+          git-push: "true"
+
+  terraform:
+    name: "Terraform ${{ github.event_name == 'push' && 'apply' || 'plan' }} (${{ join(matrix.*, ' - ') }})"
+    runs-on: ubuntu-latest
+    needs: [parse-working-directory]
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.parse-working-directory.outputs.environments) }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{needs.parse-working-directory.outputs.terraform_version}}
+          terraform_wrapper: false
+
+      # This is required to access the aveniq modules
+      - name: Add SSH Key to Runner
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.TF_SSH_PRIVATE_KEY }}"
+
+      - uses: op5dev/tf-via-pr@5a4229041e3c90818d85813d4e4a4d44f653d5e9 # v13.7.2
+        with:
+          working-directory: ${{needs.parse-working-directory.outputs.working_directory}}
+          command: ${{ github.event_name == 'push' && 'apply' || 'plan' }}
+          arg-lock: ${{ github.event_name == 'push' }}
+          arg-backend-config: key=${{needs.parse-working-directory.outputs.working_directory}}/${{matrix.environment}}.tfstate,../common/backend.hcl
+          arg-var-file: config/${{matrix.environment}}.tfvars
+          format: true
+          validate: true
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock

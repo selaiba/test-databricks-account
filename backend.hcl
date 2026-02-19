@@ -1,0 +1,10 @@
+storage_account_name = "aewinfra015533tfstate"
+snapshot             = true
+resource_group_name  = "aew-infra-01-appl-dataplatform-rg"
+container_name       = "tfstate"
+key                  = "databricks-account.tfstate"
+use_oidc             = true
+use_azuread_auth     = true
+subscription_id      = "be40020b-6e54-4432-bf33-df990f75edfa"
+tenant_id            = "91d69a3d-8563-48cb-a026-fbc6f1569769"
+client_id            = "0e10e7a6-c0b1-466a-b2f2-f94d29758966"
