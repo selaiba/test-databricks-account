@@ -1,10 +1,9 @@
-storage_account_name = "aewinfra015533tfstate"
+storage_account_name = "sthnxtfstatedev"
 snapshot             = true
-resource_group_name  = "aew-infra-01-appl-dataplatform-rg"
+resource_group_name  = "rg-hnx-tfstate-dev"
 container_name       = "tfstate"
-key                  = "databricks-account.tfstate"
 use_oidc             = true
 use_azuread_auth     = true
-subscription_id      = "be40020b-6e54-4432-bf33-df990f75edfa"
-tenant_id            = "91d69a3d-8563-48cb-a026-fbc6f1569769"
-client_id            = "0e10e7a6-c0b1-466a-b2f2-f94d29758966"
+subscription_id      = "ebcf3833-d6c3-416d-9012-f952f88c5d5b"
+tenant_id            = "def33713-b2c9-478e-be65-a98174e0271d"
+client_id            = "2378aab6-e664-485f-b2c2-4d237c78bfcb"
