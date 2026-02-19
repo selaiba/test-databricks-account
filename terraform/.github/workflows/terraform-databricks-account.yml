@@ -30,7 +30,7 @@ jobs:
         #Führt das Script mit PowerShell Core aus.
         shell: pwsh
         run: |
-          Write-Output "working_directory=." >> $env:GITHUB_OUTPUT
+          Write-Output "working_directory=terraform" >> $env:GITHUB_OUTPUT
 
   generate-docs:
     # Warning fixed in https://github.com/terraform-docs/gh-actions/issues/97#issuecomment-2016256973
