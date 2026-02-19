@@ -4,15 +4,9 @@ on:
   push:
     branches:
     - main
-    paths:
-      - '*.tf'
-      - '*.tfvars'
   pull_request:
     branches:
     - main
-    paths:
-      - '*.tf'
-      - '*.tfvars'
   workflow_dispatch:
 
 #GitHub Actions GITHUB_TOKEN permissions
