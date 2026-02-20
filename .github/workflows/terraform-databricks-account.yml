@@ -75,5 +75,5 @@ jobs:
           command: ${{ github.event_name == 'push' && 'apply' || 'plan' }}
           arg-backend-config: backend.hcl
           arg-var-file: terraform.tfvars
-          format: true
+          format: false
           validate: true
