@@ -39,7 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    defaults:
+      run:
+        working-directory: terraform
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -49,7 +51,6 @@ jobs:
       - name: Render terraform docs and push changes back to PR
         uses: terraform-docs/gh-actions@6de6da0cefcc6b4b7a5cbea4d79d97060733093c # v1.4.1
         with:
-          working-dir: ${{needs.parse-working-directory.outputs.working_directory}}
           output-file: README.md
           output-method: inject
           git-push: "true"
@@ -59,7 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [parse-working-directory]
 
-
+    defaults:
+      run:
+        working-directory: terraform
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +74,6 @@ jobs:
 
       - uses: op5dev/tf-via-pr@v13
         with:
-          working-directory: ${{ needs.parse-working-directory.outputs.working_directory }}
           command: ${{ github.event_name == 'push' && 'apply' || 'plan' }}
           arg-backend-config: backend.hcl
           arg-var-file: terraform.tfvars
