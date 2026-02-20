@@ -2,6 +2,7 @@ storage_account_name = "sthnxtfstatedev"
 snapshot             = true
 resource_group_name  = "rg-hnx-tfstate-dev"
 container_name       = "tfstate"
+key                  = "databricks-account.tfstate"
 use_oidc             = true
 use_azuread_auth     = true
 subscription_id      = "ebcf3833-d6c3-416d-9012-f952f88c5d5b"
