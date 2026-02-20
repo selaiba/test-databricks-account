@@ -18,24 +18,9 @@ permissions:
   pull-requests: write # Interaktion mit Pull Requests (hier write ist benétigt, um den Terraform-Plan als Kommentar unter deinen PR zu posten)
 
 jobs:
-  parse-working-directory:
-    name: "Parse Working Directory"
-    runs-on: ubuntu-latest
-    outputs:
-      working_directory: ${{ steps.parse.outputs.working_directory }}
-    steps:
-      - id: parse
-        #Anzeigename im UI
-        name: parse
-        #Führt das Script mit PowerShell Core aus.
-        shell: pwsh
-        run: |
-          Write-Output "working_directory=terraform" >> $env:GITHUB_OUTPUT
-
   generate-docs:
     # Warning fixed in https://github.com/terraform-docs/gh-actions/issues/97#issuecomment-2016256973
     name: "Generate Docs"
-    needs: parse-working-directory
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -58,11 +43,6 @@ jobs:
   terraform:
     name: "Terraform ${{ github.event_name == 'push' && 'apply' || 'plan' }}"
     runs-on: ubuntu-latest
-    needs: [parse-working-directory]
-
-    defaults:
-      run:
-        working-directory: terraform
     steps:
       - uses: actions/checkout@v4
 
@@ -74,6 +54,7 @@ jobs:
 
       - uses: op5dev/tf-via-pr@v13
         with:
+          working-directory: terraform
           command: ${{ github.event_name == 'push' && 'apply' || 'plan' }}
           arg-backend-config: backend.hcl
           arg-var-file: terraform.tfvars
